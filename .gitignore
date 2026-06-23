@@ -1,0 +1,19 @@
+# Node dependencies
+node_modules/
+backend/node_modules/
+
+# Environment files
+.env
+*.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary editor files
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

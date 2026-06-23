@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerTrack</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>CareerTrack Dashboard</h1>
+
+    <section>
+      <h2>Job Applications</h2>
+
+      <form id="add-job-form">
+        <input type="text" id="company-name" placeholder="Company name" required />
+        <input type="text" id="position-title" placeholder="Position title" required />
+        <input type="text" id="application-status" placeholder="Application status" required />
+        <button type="submit">Add Job</button>
+      </form>
+      <div id="job-message" class="message"></div>
+
+      <div id="jobs"></div>
+    </section>
+
+    <section>
+      <h2>Learning Topics</h2>
+
+      <form id="add-topic-form">
+        <input type="text" id="topic-name" placeholder="Topic name" required />
+        <input type="text" id="topic-status" placeholder="Status" required />
+        <button type="submit">Add Topic</button>
+      </form>
+      <div id="topic-message" class="message"></div>
+
+      <div id="learning-topics"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
