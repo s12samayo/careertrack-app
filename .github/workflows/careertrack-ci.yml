@@ -1,0 +1,29 @@
+name: CareerTrack CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Docker version
+        run: docker --version
+
+      - name: Build backend Docker image
+        run: docker build -t careertrack-backend ./backend
+
+      - name: Build frontend Docker image
+        run: docker build -t careertrack-frontend ./frontend
+
+      - name: Validate Docker Compose file
+        run: docker compose config
