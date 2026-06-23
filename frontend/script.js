@@ -11,7 +11,7 @@ async function handleAPIResponse(response) {
 
 async function loadJobs() {
   try {
-    const response = await fetch("http://3.99.144.46:5000/api/jobs");
+    const response = await fetch("http://15.222.8.252:5000/api/jobs");
     const jobs = await handleAPIResponse(response);
 
     const jobsDiv = document.getElementById("jobs");
@@ -54,7 +54,7 @@ function showMessage(elementId, message, type = "success") {
 
 async function loadLearningTopics() {
   try {
-    const response = await fetch("http://3.99.144.46:5000/api/learning-topics");
+    const response = await fetch("http://15.222.8.252:5000/api/learning-topics");
     const topics = await handleAPIResponse(response);
 
     const topicsDiv = document.getElementById("learning-topics");
@@ -98,7 +98,7 @@ async function addJob(event) {
   }
 
   try {
-    const response = await fetch("http://3.99.144.46:5000/api/jobs", {
+    const response = await fetch("http://15.222.8.252:5000/api/jobs", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -132,7 +132,7 @@ async function addLearningTopic(event) {
   }
 
   try {
-    const response = await fetch("http://3.99.144.46:5000/api/learning-topics", {
+    const response = await fetch("http://15.222.8.252:5000/api/learning-topics", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +155,7 @@ async function addLearningTopic(event) {
 
 async function deleteLearningTopic(id) {
   try {
-    const response = await fetch(`http://3.99.144.46:5000/api/learning-topics/${id}`, {
+    const response = await fetch(`http://15.222.8.252:5000/api/learning-topics/${id}`, {
       method: "DELETE",
     });
 
@@ -172,7 +172,7 @@ async function deleteLearningTopic(id) {
 
 async function deleteJob(id) {
   try {
-    const response = await fetch(`http://http://3.99.144.46:5000/api/jobs/${id}`, {
+    const response = await fetch(`http://http://15.222.8.252:5000/api/jobs/${id}`, {
       method: "DELETE",
     });
 

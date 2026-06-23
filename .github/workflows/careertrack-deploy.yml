@@ -1,0 +1,31 @@
+name: CareerTrack Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - CareerTrack CI
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on:
+      - self-hosted
+      - careertrack
+
+    steps:
+      - name: Pull latest backend image
+        run: docker pull samayohub/careertrack-backend:latest
+
+      - name: Pull latest frontend image
+        run: docker pull samayohub/careertrack-frontend:latest
+
+      - name: Deploy latest containers
+        run: |
+          cd ~/careertrack
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
+
+      - name: Verify running containers
+        run: docker ps
