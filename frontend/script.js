@@ -172,7 +172,7 @@ async function deleteLearningTopic(id) {
 
 async function deleteJob(id) {
   try {
-    const response = await fetch(`http://http://3.99.144.46/:5000/api/jobs/${id}`, {
+    const response = await fetch(`http://http://3.99.144.46:5000/api/jobs/${id}`, {
       method: "DELETE",
     });
 
