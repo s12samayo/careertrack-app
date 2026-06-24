@@ -30,6 +30,16 @@ The application uses a multi-container architecture powered by Docker Compose an
 * PgAdmin database management
 * Multi-container networking
 
+
+## DevOps Features
+
+* GitHub Actions Continuous Integration (CI)
+* Docker Hub Image Publishing
+* AWS EC2 Deployment
+* GitHub Actions Self-Hosted Runner
+* Automated Continuous Deployment (CD)
+* PostgreSQL Database Initialization Automation
+* Production Docker Compose Deployment
 ---
 
 ## Technology Stack
@@ -66,7 +76,14 @@ The application uses a multi-container architecture powered by Docker Compose an
 careertrack_project/
 ├── backend
 ├── frontend
+├── database
+│   └── init.sql
+├── .github
+│   └── workflows
+│       ├── careertrack-ci.yml
+│       └── careertrack-deploy.yml
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── README.md
 └── ARCHITECTURE.md
 ```
@@ -100,8 +117,48 @@ GET /api/learning-topics
 POST /api/learning-topics
 DELETE /api/learning-topics/:id
 ```
+## CI/CD Pipeline
 
+The CareerTrack application uses GitHub Actions to automate software delivery.
+
+### Continuous Integration
+
+1. Developer pushes code to GitHub.
+2. GitHub Actions builds backend and frontend Docker images.
+3. Images are pushed to Docker Hub.
+
+### Continuous Deployment
+
+1. Successful CI pipeline triggers the deployment workflow.
+2. Self-hosted GitHub Actions runner on AWS EC2 receives the deployment job.
+3. Latest images are pulled from Docker Hub.
+4. Docker Compose updates the running application automatically.
+
+### Deployment Flow
+
+Developer
+→ GitHub
+→ GitHub Actions CI
+→ Docker Hub
+→ GitHub Actions Deploy
+→ Self-Hosted Runner (EC2)
+→ Docker Compose
+→ CareerTrack Application
 ---
+
+## AWS Deployment
+
+CareerTrack is deployed on AWS EC2 using Docker Compose.
+
+Services deployed:
+
+* Frontend
+* Backend
+* PostgreSQL
+* Redis
+* PgAdmin
+
+The deployment is fully automated through GitHub Actions and a self-hosted runner.
 
 ## Learning Outcomes
 
@@ -117,14 +174,25 @@ This project helped develop skills in:
 * Troubleshooting
 * Root Cause Analysis
 * DevOps Ticket Documentation
-
+* GitHub Actions
+* Docker Hub
+* AWS EC2
+* Self-Hosted Runners
+* Continuous Integration (CI)
+* Continuous Deployment (CD)
+* PostgreSQL Initialization Scripts
+* Production Deployment
 ---
 
 ## Future Enhancements
 
-* Update functionality
-* GitHub Actions CI/CD
-* Docker Hub Integration
-* AWS Deployment
+* ## Future Enhancements
+
+* Update/Edit functionality (Complete CRUD)
 * Prometheus Monitoring
 * Grafana Dashboards
+* Application Health Checks
+* Nginx Reverse Proxy
+* HTTPS with SSL Certificates
+* Custom Domain Name
+* Kubernetes Deployment
