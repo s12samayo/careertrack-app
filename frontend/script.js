@@ -1,3 +1,12 @@
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
+
+let editingJobId = null;
+let editingTopicId = null;
+
+function getElement(id) {
+  return document.getElementById(id);
+}
+
 async function handleAPIResponse(response) {
   const data = await response.json().catch(() => null);
 
@@ -9,38 +18,8 @@ async function handleAPIResponse(response) {
   return data;
 }
 
-async function loadJobs() {
-  try {
-    const response = await fetch("http://15.222.8.252:5000/api/jobs");
-    const jobs = await handleAPIResponse(response);
-
-    const jobsDiv = document.getElementById("jobs");
-    jobsDiv.innerHTML = "";
-
-    if (!jobs.length) {
-      jobsDiv.innerHTML = `<p class="empty-state">No job applications yet. Add one above to get started.</p>`;
-      return;
-    }
-
-    jobs.forEach((job) => {
-      jobsDiv.innerHTML += `
-        <p>
-          <span>
-            <strong>${job.company_name}</strong> -
-            ${job.position_title}
-            (${job.application_status})
-          </span>
-          <button type="button" onclick="deleteJob(${job.id})">Delete</button>
-        </p>
-      `;
-    });
-  } catch (error) {
-    showMessage("job-message", error.message || "Unable to load job applications.", "error");
-  }
-}
-
 function showMessage(elementId, message, type = "success") {
-  const element = document.getElementById(elementId);
+  const element = getElement(elementId);
   element.textContent = message;
   element.className = `message ${type}`;
 
@@ -52,54 +31,164 @@ function showMessage(elementId, message, type = "success") {
   }
 }
 
+function resetJobForm() {
+  getElement("add-job-form").reset();
+  editingJobId = null;
+  document.querySelector("#add-job-form button").textContent = "Add Job";
+}
+
+function resetTopicForm() {
+  getElement("add-topic-form").reset();
+  editingTopicId = null;
+  document.querySelector("#add-topic-form button").textContent = "Add Topic";
+}
+
+function createButton(label, onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function renderEmptyState(container, message) {
+  const emptyState = document.createElement("p");
+  emptyState.className = "empty-state";
+  emptyState.textContent = message;
+  container.appendChild(emptyState);
+}
+
+function renderJob(job) {
+  const row = document.createElement("p");
+
+  const details = document.createElement("span");
+  const company = document.createElement("strong");
+  company.textContent = job.company_name;
+
+  details.append(
+    company,
+    ` - ${job.position_title} (${job.application_status})`
+  );
+
+  row.append(
+    details,
+    createButton("Edit", () => startEditJob(job)),
+    createButton("Delete", () => deleteJob(job.id))
+  );
+
+  return row;
+}
+
+function renderLearningTopic(topic) {
+  const row = document.createElement("p");
+
+  const details = document.createElement("span");
+  const topicName = document.createElement("strong");
+  topicName.textContent = topic.topic_name;
+
+  details.append(topicName, ` - ${topic.status}`);
+
+  row.append(
+    details,
+    createButton("Edit", () => startEditLearningTopic(topic)),
+    createButton("Delete", () => deleteLearningTopic(topic.id))
+  );
+
+  return row;
+}
+
+async function loadJobs() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/jobs`);
+    const jobs = await handleAPIResponse(response);
+
+    const jobsDiv = getElement("jobs");
+    jobsDiv.replaceChildren();
+
+    if (!jobs.length) {
+      renderEmptyState(
+        jobsDiv,
+        "No job applications yet. Add one above to get started."
+      );
+      return;
+    }
+
+    jobs.forEach((job) => {
+      jobsDiv.appendChild(renderJob(job));
+    });
+  } catch (error) {
+    showMessage(
+      "job-message",
+      error.message || "Unable to load job applications.",
+      "error"
+    );
+  }
+}
+
 async function loadLearningTopics() {
   try {
-    const response = await fetch("http://15.222.8.252:5000/api/learning-topics");
+    const response = await fetch(`${API_BASE_URL}/api/learning-topics`);
     const topics = await handleAPIResponse(response);
 
-    const topicsDiv = document.getElementById("learning-topics");
-    topicsDiv.innerHTML = "";
+    const topicsDiv = getElement("learning-topics");
+    topicsDiv.replaceChildren();
 
     if (!topics.length) {
-      topicsDiv.innerHTML = `<p class="empty-state">No learning topics yet. Add one above to begin.</p>`;
+      renderEmptyState(topicsDiv, "No learning topics yet. Add one above to begin.");
       return;
     }
 
     topics.forEach((topic) => {
-      topicsDiv.innerHTML += `
-        <p>
-          <span>
-            <strong>${topic.topic_name}</strong> -
-            ${topic.status}
-          </span>
-          <button type="button" onclick="deleteLearningTopic(${topic.id})">
-            Delete
-          </button>
-        </p>
-      `;
+      topicsDiv.appendChild(renderLearningTopic(topic));
     });
   } catch (error) {
-    showMessage("topic-message", error.message || "Unable to load learning topics.", "error");
+    showMessage(
+      "topic-message",
+      error.message || "Unable to load learning topics.",
+      "error"
+    );
   }
+}
+
+function startEditJob(job) {
+  editingJobId = job.id;
+
+  getElement("company-name").value = job.company_name;
+  getElement("position-title").value = job.position_title;
+  getElement("application-status").value = job.application_status;
+
+  document.querySelector("#add-job-form button").textContent = "Update Job";
+}
+
+function startEditLearningTopic(topic) {
+  editingTopicId = topic.id;
+
+  getElement("topic-name").value = topic.topic_name;
+  getElement("topic-status").value = topic.status;
+
+  document.querySelector("#add-topic-form button").textContent = "Update Topic";
 }
 
 async function addJob(event) {
   event.preventDefault();
 
-  const companyName = document.getElementById("company-name").value.trim();
-  const positionTitle = document.getElementById("position-title").value.trim();
-  const applicationStatus = document
-    .getElementById("application-status")
-    .value.trim();
+  const companyName = getElement("company-name").value.trim();
+  const positionTitle = getElement("position-title").value.trim();
+  const applicationStatus = getElement("application-status").value.trim();
 
   if (!companyName || !positionTitle || !applicationStatus) {
     showMessage("job-message", "Please fill in every field.", "error");
     return;
   }
 
+  const isEditing = Boolean(editingJobId);
+  const url = isEditing
+    ? `${API_BASE_URL}/api/jobs/${editingJobId}`
+    : `${API_BASE_URL}/api/jobs`;
+
   try {
-    const response = await fetch("http://15.222.8.252:5000/api/jobs", {
-      method: "POST",
+    const response = await fetch(url, {
+      method: isEditing ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -112,28 +201,38 @@ async function addJob(event) {
 
     await handleAPIResponse(response);
 
-    document.getElementById("add-job-form").reset();
-    loadJobs();
-    showMessage("job-message", "Job added successfully.", "success");
+    resetJobForm();
+    await loadJobs();
+
+    showMessage(
+      "job-message",
+      isEditing ? "Job updated successfully." : "Job added successfully.",
+      "success"
+    );
   } catch (error) {
-    showMessage("job-message", error.message || "Failed to add job.", "error");
+    showMessage("job-message", error.message || "Failed to save job.", "error");
   }
 }
 
 async function addLearningTopic(event) {
   event.preventDefault();
 
-  const topicName = document.getElementById("topic-name").value.trim();
-  const topicStatus = document.getElementById("topic-status").value.trim();
+  const topicName = getElement("topic-name").value.trim();
+  const topicStatus = getElement("topic-status").value.trim();
 
   if (!topicName || !topicStatus) {
     showMessage("topic-message", "Please fill in every field.", "error");
     return;
   }
 
+  const isEditing = Boolean(editingTopicId);
+  const url = isEditing
+    ? `${API_BASE_URL}/api/learning-topics/${editingTopicId}`
+    : `${API_BASE_URL}/api/learning-topics`;
+
   try {
-    const response = await fetch("http://15.222.8.252:5000/api/learning-topics", {
-      method: "POST",
+    const response = await fetch(url, {
+      method: isEditing ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -145,55 +244,69 @@ async function addLearningTopic(event) {
 
     await handleAPIResponse(response);
 
-    document.getElementById("add-topic-form").reset();
-    loadLearningTopics();
-    showMessage("topic-message", "Learning topic added successfully.", "success");
+    resetTopicForm();
+    await loadLearningTopics();
+
+    showMessage(
+      "topic-message",
+      isEditing
+        ? "Learning topic updated successfully."
+        : "Learning topic added successfully.",
+      "success"
+    );
   } catch (error) {
-    showMessage("topic-message", error.message || "Failed to add learning topic.", "error");
+    showMessage(
+      "topic-message",
+      error.message || "Failed to save learning topic.",
+      "error"
+    );
   }
 }
 
 async function deleteLearningTopic(id) {
   try {
-    const response = await fetch(`http://15.222.8.252:5000/api/learning-topics/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/learning-topics/${id}`, {
       method: "DELETE",
     });
 
-    if (!response.ok) {
-      throw new Error("Delete failed");
+    await handleAPIResponse(response);
+
+    if (editingTopicId === id) {
+      resetTopicForm();
     }
 
-    loadLearningTopics();
+    await loadLearningTopics();
     showMessage("topic-message", "Topic deleted successfully.", "success");
   } catch (error) {
-    showMessage("topic-message", "Failed to delete learning topic.", "error");
+    showMessage(
+      "topic-message",
+      error.message || "Failed to delete learning topic.",
+      "error"
+    );
   }
 }
 
 async function deleteJob(id) {
   try {
-    const response = await fetch(`http://http://15.222.8.252:5000/api/jobs/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
       method: "DELETE",
     });
 
-    if (!response.ok) {
-      throw new Error("Delete failed");
+    await handleAPIResponse(response);
+
+    if (editingJobId === id) {
+      resetJobForm();
     }
 
-    loadJobs();
+    await loadJobs();
     showMessage("job-message", "Job deleted successfully.", "success");
   } catch (error) {
-    showMessage("job-message", "Failed to delete job.", "error");
+    showMessage("job-message", error.message || "Failed to delete job.", "error");
   }
 }
 
-document
-  .getElementById("add-job-form")
-  .addEventListener("submit", addJob);
-
-document
-  .getElementById("add-topic-form")
-  .addEventListener("submit", addLearningTopic);
+getElement("add-job-form").addEventListener("submit", addJob);
+getElement("add-topic-form").addEventListener("submit", addLearningTopic);
 
 loadJobs();
 loadLearningTopics();

@@ -4,9 +4,23 @@ const pool = require("./db");
 const redisClient = require("./redisClient");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+function isValidId(id) {
+  return Number.isInteger(Number(id)) && Number(id) > 0;
+}
+
+function cleanRequiredFields(fields) {
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [
+      key,
+      typeof value === "string" ? value.trim() : "",
+    ])
+  );
+}
 
 app.get("/", (req, res) => {
   res.json({
@@ -43,7 +57,8 @@ app.get("/api/jobs", async (req, res) => {
 
 app.post("/api/jobs", async (req, res) => {
   try {
-    const { company_name, position_title, application_status } = req.body;
+    const { company_name, position_title, application_status } =
+      cleanRequiredFields(req.body);
 
     if (!company_name || !position_title || !application_status) {
       return res.status(400).json({
@@ -85,7 +100,7 @@ app.get("/api/learning-topics", async (req, res) => {
 
 app.post("/api/learning-topics", async (req, res) => {
   try {
-    const { topic_name, status } = req.body;
+    const { topic_name, status } = cleanRequiredFields(req.body);
 
     if (!topic_name || !status) {
       return res.status(400).json({
@@ -112,7 +127,21 @@ app.delete("/api/learning-topics/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await pool.query("DELETE FROM learning_topics WHERE id = $1", [id]);
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        error: "Valid learning topic id is required",
+      });
+    }
+
+    const result = await pool.query("DELETE FROM learning_topics WHERE id = $1", [
+      id,
+    ]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        error: "Learning topic not found",
+      });
+    }
 
     res.json({
       message: "Learning topic deleted successfully",
@@ -130,7 +159,20 @@ app.delete("/api/jobs/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await pool.query("DELETE FROM jobs WHERE id = $1", [id]);
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        error: "Valid job id is required",
+      });
+    }
+
+    const result = await pool.query("DELETE FROM jobs WHERE id = $1", [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        error: "Job not found",
+      });
+    }
+
     await redisClient.del("jobs");
 
     res.json({
@@ -144,14 +186,106 @@ app.delete("/api/jobs/:id", async (req, res) => {
     });
   }
 });
-const PORT = 5000;
+
+app.put("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { company_name, position_title, application_status } =
+      cleanRequiredFields(req.body);
+
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        error: "Valid job id is required",
+      });
+    }
+
+    if (!company_name || !position_title || !application_status) {
+      return res.status(400).json({
+        error: "company_name, position_title, and application_status are required",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE jobs
+       SET company_name = $1,
+           position_title = $2,
+           application_status = $3
+       WHERE id = $4
+       RETURNING *`,
+      [company_name, position_title, application_status, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        error: "Job not found",
+      });
+    }
+
+    await redisClient.del("jobs");
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to update job",
+    });
+  }
+});
+
+app.put("/api/learning-topics/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { topic_name, status } = cleanRequiredFields(req.body);
+
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        error: "Valid learning topic id is required",
+      });
+    }
+
+    if (!topic_name || !status) {
+      return res.status(400).json({
+        error: "topic_name and status are required",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE learning_topics
+       SET topic_name = $1,
+           status = $2
+       WHERE id = $3
+       RETURNING *`,
+      [topic_name, status, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        error: "Learning topic not found",
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to update learning topic",
+    });
+  }
+});
 
 async function startServer() {
-  await redisClient.connect();
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+  }
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});
