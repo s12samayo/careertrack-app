@@ -260,7 +260,7 @@ Containers running successfully on AWS EC2.
 
 * ## Future Enhancements
 
-* Update/Edit functionality (Complete CRUD)
+
 * Prometheus Monitoring
 * Grafana Dashboards
 * Application Health Checks
