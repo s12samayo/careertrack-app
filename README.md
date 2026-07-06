@@ -184,6 +184,78 @@ This project helped develop skills in:
 * Production Deployment
 ---
 
+# Application Screenshots
+
+## CareerTrack Dashboard
+
+Displays all job applications and DevOps learning topics.
+
+![Dashboard](screenshots/dashboard.png)
+
+---
+
+## PostgreSQL Database
+
+PgAdmin connected to PostgreSQL showing the project tables.
+
+![PgAdmin Tables](screenshots/pgadmin-tables.png)
+
+---
+
+## Job Records
+
+Job applications stored inside PostgreSQL.
+
+![Jobs Table](screenshots/jobs-table-data.png)
+
+---
+
+## Learning Topics
+
+Learning topics stored inside PostgreSQL.
+
+![Learning Topics](screenshots/learning-topics-data.png)
+
+---
+
+## Running Docker Containers
+
+All application services running successfully.
+
+![Docker Containers](screenshots/docker-containers.png)
+
+---
+
+## GitHub Actions CI
+
+Continuous Integration pipeline.
+
+![CI](screenshots/github-actions-ci.png)
+
+---
+
+## GitHub Actions Deployment
+
+Continuous Deployment pipeline.
+
+![Deploy](screenshots/github-actions-deploy.png)
+
+---
+
+## Docker Hub Images
+
+Application images published automatically.
+
+![Docker Hub](screenshots/dockerhub-repositories.png)
+
+---
+
+## EC2 Deployment
+
+Containers running successfully on AWS EC2.
+
+![EC2](screenshots/ec2-docker-ps.png)
+
 ## Future Enhancements
 
 * ## Future Enhancements
