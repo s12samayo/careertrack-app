@@ -22,10 +22,14 @@ jobs:
         run: docker pull samayohub/careertrack-frontend:latest
 
       - name: Deploy latest containers
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         run: |
           cd ~/careertrack
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d
+          printf '%s\n' "$PROD_ENV_FILE" > .env.production
+          chmod 600 .env.production
+          docker compose --env-file .env.production -f docker-compose.prod.yml pull
+          docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
       - name: Verify running containers
         run: docker ps
