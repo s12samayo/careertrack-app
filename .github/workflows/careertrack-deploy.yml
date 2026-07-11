@@ -9,27 +9,53 @@ on:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' }}
     runs-on:
       - self-hosted
       - careertrack
 
     steps:
-      - name: Pull latest backend image
-        run: docker pull samayohub/careertrack-backend:latest
+      - name: Check out successful CI commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Pull latest frontend image
-        run: docker pull samayohub/careertrack-frontend:latest
+      - name: Copy production configuration
+        run: |
+          mkdir -p ~/careertrack/database
+          cp docker-compose.prod.yml ~/careertrack/docker-compose.prod.yml
+          cp database/init.sql ~/careertrack/database/init.sql
 
-      - name: Deploy latest containers
+      - name: Recreate production containers
         env:
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         run: |
+          if [ -z "$PROD_ENV_FILE" ]; then
+            echo "PROD_ENV_FILE repository secret is not configured."
+            exit 1
+          fi
           cd ~/careertrack
           printf '%s\n' "$PROD_ENV_FILE" > .env.production
           chmod 600 .env.production
-          docker compose --env-file .env.production -f docker-compose.prod.yml pull
-          docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+          docker compose --env-file .env.production -f docker-compose.prod.yml up \
+            -d \
+            --pull always \
+            --force-recreate \
+            --remove-orphans
 
       - name: Verify running containers
-        run: docker ps
+        run: |
+          cd ~/careertrack
+          docker compose --env-file .env.production -f docker-compose.prod.yml ps
+
+      - name: Verify container health
+        run: |
+          docker ps
+
+          echo "Waiting for healthchecks..."
+          sleep 30
+
+          docker ps    
